@@ -9,23 +9,35 @@ let getUsername = (url) => {
     return userName
 }
 
-let name = getUsername(url)
+let name = getUsername(url);
 
-fetch('https://api.github.com/users/' + name)
-    .then(res => res.json())
-    .then(json => {
-        let avatar = json.avatar_url;
-        let name = json.login;
-        let bio = json.bio;
-        let profile =json.html_url;
+let getNowDate = new Promise((resolve, reject) => {
+    let nowDate = new Date();
+    setTimeout(() => nowDate ? resolve(nowDate) : reject ('Ошибка вычисления времени'), 3000)
+});
+
+
+let getUserData = fetch('https://api.github.com/users/' + name);
+
+Promise.all([getUserData, getNowDate])
+    .then(([ourUserData, ourNowDate]) => {
+        userData = ourUserData;
+        currentDate = ourNowDate;
+    })
+
+    .then(res => userData.json())
+    .then(userInfo => {
+        let avatar = userInfo.avatar_url;
+        let name = userInfo.login;
+        let bio = userInfo.bio;
+        let profile = userInfo.html_url;
         if (name) {
-
             let createAvatar = () => {
                 let newAvatar = document.createElement('img');
                 newAvatar.src = avatar;
-  //              let addString = document.createElement('br');
+                let addString = document.createElement('br');
                 document.body.appendChild(newAvatar);
-  //              document.body.appendChild(addString);
+                document.body.appendChild(addString);
             }
 
             let createBio = () => {
@@ -43,13 +55,25 @@ fetch('https://api.github.com/users/' + name)
                 elementForLink.appendChild(elementForHeader);
             }
 
+            let createDate = () => {
+                let newCurrentDate = document.createElement('p');
+                newCurrentDate.innerHTML = currentDate;
+                document.body.appendChild(newCurrentDate);
+            }
+
+            let elementForPreloader = document.getElementById('preload');
+            elementForPreloader.classList.add('hidden');
+
             createProfile();
             createBio();
             createAvatar();
+            createDate()
         }
         else {
-            alert(' Профиль не найден')
+            alert(' Пользователь с таким никнеймом не найден')
         }
     })
 
-    .catch(err => alert(err + ' Профиль не найден'));
+    .catch(err => {
+        alert(err + ' Профиль не найден');
+    });
